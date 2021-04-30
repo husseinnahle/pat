@@ -1,5 +1,6 @@
 /* ********************* *
  * TP2 INF3173 H2021
+ * Code permanent: NAHH85090004
  * Nom: Nahlé
  * Prénom: Hussein
  * ********************* */
@@ -35,6 +36,14 @@
  *    cmd_n       --> nombre de commande
  * 
  *    cmd_arr     --> tableau contenant les commandes
+ * _________ ----------------------------------------------
+ *  exemple | ./pat -s @@ cat prog1 @@ ./prog2
+ * ---------'  
+ * 
+ *    flag_s = 1
+ *    sep = "@@"
+ *    cmd_n = 2
+ *    cmd_arr = [[cat, prog1, NULL], [./prog2, NULL]]
  */
 
 typedef struct{
@@ -385,6 +394,11 @@ void setCmd(pat_t *pat, int argc, char **argv){
  * Initialiser 2 tubes pour chaque élément de cmd_arr.
  * Le premier pour l'entrée standard et le deuxième pour
  * la sortie standard.
+ * 
+ * exemple:  ./pat cat prog1 + ./prog2
+ * --------
+ * cmd_arr = [[cat, prog1, NULL], [./prog2, NULL]]
+ * pipeArr = [[pipe_stdout1, pipe_stderr1], [pipe_stdout2, pipe_stderr2]]
  */
 
 int ***setPipeArr(pat_t *pat){
@@ -523,9 +537,9 @@ struct pollfd* setPoll(pat_t *pat, int ***pipeArr){
  * de la premières commande, et à l'indexe 2 et 3 les tubes
  * de la deuxième.
  * 
- * En faisant les opérations si-dessous et en se basant sur 
- * l'indexe des tubes, on pourrait déterminer le numéro de la 
- * commandes.
+ * En faisant les opérations si-dessous on pourrait déterminer
+ * le numéro de la commandes, en se basant sur l'indexe des
+ * tubes.
  */
 
 int getCmdNumber(int i){
@@ -552,7 +566,7 @@ int setGlobalRessources(char *sep, int cmd_n){
 }
 
 /* ********************************************************
- * Démarrer poll, lire et afficher le contenue de chaque 
+ * Démarrer le poll, lire et afficher le contenue de chaque 
  * tube. À chaque itération, actual et previous vont être
  * mis à jour, pour faire les bons affichages.
  */
