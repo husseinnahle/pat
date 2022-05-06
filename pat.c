@@ -1,8 +1,6 @@
 /* ********************* *
  * TP2 INF3173 H2021
- * Code permanent: NAHH85090004
- * Nom: Nahlé
- * Prénom: Hussein
+ * Auteur: Hussein Nahle
  * ********************* */
 
 #include <stdio.h>
@@ -46,7 +44,8 @@
  *    cmd_arr = [[cat, prog1, NULL], [./prog2, NULL]]
  */
 
-typedef struct{
+typedef struct
+{
   int flag_s;
   char *sep;
   int cmd_n;
@@ -70,7 +69,8 @@ typedef struct{
  *                        message
  */
 
-typedef struct{
+typedef struct
+{
   int writenTo;   
   int endsWithNewLine;
   int cameFrom;
@@ -90,25 +90,25 @@ int status = 0;
 
 
 // Condition 1 pour gérer l'affichage du séparateur
-int canPrintSepWithNewLine(){
-  int value = 0;
-
-  if(!previous.endsWithNewLine && ((actual.cameFrom != previous.cameFrom) 
-    || previous.writenTo != actual.writenTo))
-      value = 1;
-  
-  return value;
+int canPrintSepWithNewLine()
+{
+  if (!previous.endsWithNewLine && ((actual.cameFrom != previous.cameFrom) ||
+    previous.writenTo != actual.writenTo))
+  {
+    return 1;
+  }  
+  return 0;
 }
 
 // Condition 2 pour gérer l'affichage du séparateur
-int canPrintSepWithoutNewLine(){
-  int value = 0;
-
-  if((previous.endsWithNewLine && (actual.cameFrom != previous.cameFrom)) 
-    || ((actual.cameFrom == previous.cameFrom) && (previous.writenTo != actual.writenTo)))
-      value = 1;
-
-  return value;
+int canPrintSepWithoutNewLine()
+{
+  if ((previous.endsWithNewLine && (actual.cameFrom != previous.cameFrom)) ||
+    ((actual.cameFrom == previous.cameFrom) && (previous.writenTo != actual.writenTo)))
+  {
+    return 1;
+  }
+  return 0;
 }
 
 /* ********************************************************
@@ -119,48 +119,57 @@ int canPrintSepWithoutNewLine(){
  *    index   --> numéro de la commande
  */ 
 
-void printSep(char* msg, int index){
-  for (int i = 0; i < 3; i++){
+void printSep(char* msg, int index)
+{
+  for (int i = 0; i < 3; i++)
+  {
     printf("%s", separator);
   }
 
-  if(numberOfCmds > 1)
+  if (numberOfCmds > 1)
+  {
     printf(" %s %d", msg, index);
-  
-  else if(numberOfCmds == 1)
-    printf(" %s", msg);
+  }
 
-  if(strncmp(msg, "exit", strlen(msg)))
+  else if (numberOfCmds == 1)
+  {
+    printf(" %s", msg);
+  }
+
+  if (strncmp(msg, "exit", strsize(msg)))
+  {
     printf("\n");
-  
+  }  
 }
 
 // Capturer les signals et gérer l'affichage du status/signal 
-void handler(int sig){
-
+void handler(int sig)
+{
   actual.writenTo = -1;
   actual.endsWithNewLine = 1;
   actual.cameFrom = previous.cameFrom;
 
-  if(!previous.endsWithNewLine)
+  if (!previous.endsWithNewLine)
+  {
     printf("\n%s", separator);
-    
+  }    
   printSep("exit", actual.cameFrom);
 
   int currentChildStatus;
-  if (wait(&currentChildStatus) == -1) {
+  if (wait(&currentChildStatus) == -1)
+  {
     fprintf(stderr, "pat: wait failed\n");
     free(separator);
     exit(ERR_CODE);
   }
 
-  if (WIFEXITED(currentChildStatus)){
-
+  if (WIFEXITED(currentChildStatus))
+  {
     currentChildStatus = WEXITSTATUS(currentChildStatus);
-    printf(", status=%d\n", currentChildStatus);
-  
-  }else if (WIFSIGNALED(currentChildStatus)){
-
+    printf(", status=%d\n", currentChildStatus);  
+  }
+  else if (WIFSIGNALED(currentChildStatus))
+  {
     currentChildStatus = WTERMSIG(currentChildStatus);
     printf(", signal=%d\n", currentChildStatus);
     currentChildStatus += 128;
@@ -168,31 +177,35 @@ void handler(int sig){
 
   previous.endsWithNewLine = actual.endsWithNewLine;
   previous.writenTo = -1;
-
   status += currentChildStatus;
 }
 
-void freePat(pat_t *pat){
+
+void freePat(pat_t *pat)
+{
   free(pat->sep);
-  if (pat->cmd_arr != NULL){
-
-    for (int i = 0; i < pat->cmd_n; i++){
-
-      for (int j = 0; pat->cmd_arr[i][j] != NULL; j++){
-        free(pat->cmd_arr[i][j]);
-      }
-
-      free(pat->cmd_arr[i]);
-    }
-
-    free(pat->cmd_arr);
+  if (pat->cmd_arr == NULL)
+  {
+    return;
   }
-
+  for (int i = 0; i < pat->cmd_n; i++)
+  {
+    for (int j = 0; pat->cmd_arr[i][j]; j++)
+    {
+      free(pat->cmd_arr[i][j]);
+    }
+    free(pat->cmd_arr[i]);
+  }
+  free(pat->cmd_arr);
 }
 
-void freePipeArr(int ***pipeArr, int num_open_fds){
-  for (int i = 0; i < num_open_fds; i++){
-    for (int j = 0; j < 2; j++){
+
+void freePipeArr(int ***pipeArr, int num_open_fds)
+{
+  for (int i = 0; i < num_open_fds; i++)
+  {
+    for (int j = 0; j < 2; j++)
+    {
       free(pipeArr[i][j]);
     }
     free(pipeArr[i]);
@@ -200,25 +213,32 @@ void freePipeArr(int ***pipeArr, int num_open_fds){
   free(pipeArr);
 }
 
-void freeAll(pat_t* pat, struct pollfd* p, int ***pipeArr){
+
+void freeAll(pat_t* pat, struct pollfd* p, int ***pipeArr)
+{
   freePipeArr(pipeArr, pat->cmd_n);
   freePat(pat);
-  if(p != NULL) free(p);
+  if (p)
+  {
+    free(p);
+  }
   free(separator);
 }
 
-void pexit(char *msg, int returnCode, pat_t *pat){
+void pexit(char *msg, int returnCode, pat_t *pat)
+{
   fprintf(stderr, "%s", msg);
   freePat(pat);
   exit(returnCode);
 }
 
 // Initialiser le séparateur par défault
-char *setDefaultSeparator(){
+char *setDefaultSeparator()
+{
   char def_sep = DEFAULT_SEP;
   char *sep = malloc(2 * sizeof(char));
-
-  if (sep == NULL){
+  if (sep == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", (2 * sizeof(char)));
     exit(ERR_CODE);
   }
@@ -229,30 +249,29 @@ char *setDefaultSeparator(){
 }
 
 // Initialiser le séparateur entrée par l'utilisateur (s'il existe)
-void setSeparator(pat_t *pat, char *sep){
+void setSeparator(pat_t *pat, char *sep)
+{
   free(pat->sep);
-
   pat->sep = calloc(1, sizeof(sep));
-  if (pat->sep == NULL){
+  if (pat->sep == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", sizeof(sep));
     exit(ERR_CODE);
   }
-
-  strncpy(pat->sep, sep, strlen(sep));
+  strncpy(pat->sep, sep, strsize(sep));
 }
 
 // Vérifier l'option 'c' dans 'src'
-int checkOption(char c, char *src){
-  if (src[0] == '-'){
-
-    if (strlen(src) == 2 && src[1] == 's')
+int checkOption(char c, char *src)
+{
+  if (src[0] == '-')
+  {
+    if (strsize(src) == 2 && src[1] == 's')
+    {
       return 1;
-    
-    else
-      return -1;
-  
+    }
+    return -1;
   }
-
   return 0;
 }
 
@@ -263,45 +282,53 @@ int checkOption(char c, char *src){
  * Sinon afficher un message d'erreur et quitter le programme
  */
 
-void checkArgs(pat_t *pat, int argc, char **argv){
-
-  if (argc == 1){
+void checkArgs(pat_t *pat, int argc, char **argv)
+{
+  if (argc == 1)
+  {
     pexit(USG_MSG, ERR_CODE, pat);
-  
-  }else if (argc > 1){
+  }
+  else if (argc > 1)
+  {
     int check = checkOption('s', argv[1]);
-
-    if (check == -1){
+    if (check == -1)
+    {
       fprintf(stderr, "pat: %s: invalid option\n", argv[1]);
       pexit(USG_MSG, ERR_CODE, pat);
-    
-    }else if (check == 1){
-
-      if (argv[2] == NULL){
+    }
+    else if (check == 1)
+    {
+      if (argv[2] == NULL)
+      {
         fprintf(stderr, "pat: separator not found\n");
         pexit(USG_MSG, ERR_CODE, pat);
       }
-
-      if (argc < 4){
+      if (argc < 4)
+      {
         fprintf(stderr, "pat: Not enough arguments\n");
         pexit(USG_MSG, ERR_CODE, pat);
       }
-
       pat->flag_s++;
       setSeparator(pat, argv[2]);
     }
-  }
 
+  }
 }
 
 // Trouver le nombre de commande et l'enregistrer dans pat_t. 
-void setNumberOfCmd(int argc, char **argv, pat_t *pat){
+void setNumberOfCmd(int argc, char **argv, pat_t *pat)
+{
   int start = 1;
-  if (pat->flag_s) start = 3;
-
-  for (int i = start; i < argc; i++){
+  if (pat->flag_s) 
+  {
+    start = 3;
+  }
+  for (int i = start; i < argc; i++)
+  {
     if (!strcmp(argv[i], pat->sep))
+    {
       pat->cmd_n++;
+    }
   }
 }
 
@@ -321,69 +348,69 @@ void setNumberOfCmd(int argc, char **argv, pat_t *pat){
  *    argc  --> aucun séparateur trouver
  */
 
-int indexOfNextSep(int argc, char **argv, int j, char *sep){
-
-  for (int i = j + 1; i < argc; i++){
-
+int indexOfNextSep(int argc, char **argv, int j, char *sep)
+{
+  for (int i = j + 1; i < argc; i++)
+  {
     if (strncmp(argv[i - 1], "-s", 2) && !strcmp(argv[i], sep))
+    {
       return i;
-
+    }
   }
-
   return argc;
 }
 
 
 //Initialiser le tableau cmd_arr de pat_t.
-void setCmd(pat_t *pat, int argc, char **argv){
-
+void setCmd(pat_t *pat, int argc, char **argv)
+{
   int tmp = 1;
-  if (pat->flag_s) tmp = 3;
-
+  if (pat->flag_s) 
+  {
+    tmp = 3;
+  }
   int index = 0;
   int j = 0;
   int z = 0;
-
   size_t size = pat->cmd_n * sizeof(char **);
   pat->cmd_arr = calloc(pat->cmd_n, sizeof(char **));
-  if (pat->cmd_arr == NULL){
+  if (pat->cmd_arr == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
     free(pat->sep);
     exit(ERR_CODE);
   }
 
-  for (int i = 0; i < pat->cmd_n; i++){
-
+  for (int i = 0; i < pat->cmd_n; i++)
+  {
     int nextIndex = indexOfNextSep(argc, argv, index, pat->sep);
-
     size = (nextIndex - index - 1) * sizeof(char *);
     pat->cmd_arr[i] = calloc((nextIndex - index - 1 + 4), sizeof(char *));
-    if (pat->cmd_arr[i] == NULL){
+    if (pat->cmd_arr[i] == NULL)
+    {
       fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
       freePat(pat);
       exit(ERR_CODE);
     }
-
-    for (j = index + 1; j < nextIndex; j++){
-
-      if (tmp == 3){
+    for (j = index + 1; j < nextIndex; j++)
+    {
+      if (tmp == 3)
+      {
         j += 1;
         tmp++;
         continue;
       }
-
       size = sizeof(argv[j]);
       pat->cmd_arr[i][z] = calloc(1, sizeof(argv[j]));
-      if (pat->cmd_arr[i][z] == NULL){
+      if (pat->cmd_arr[i][z] == NULL)
+      {
         fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
         freePat(pat);
         exit(ERR_CODE);
       }
-
-      strncpy(pat->cmd_arr[i][z], argv[j], strlen(argv[j]));
+      strncpy(pat->cmd_arr[i][z], argv[j], strsize(argv[j]));
       z++;
     }
-
     pat->cmd_arr[i][z] = NULL;
     z = 0;
     index = j;
@@ -401,38 +428,42 @@ void setCmd(pat_t *pat, int argc, char **argv){
  * pipeArr = [[pipe_stdout1, pipe_stderr1], [pipe_stdout2, pipe_stderr2]]
  */
 
-int ***setPipeArr(pat_t *pat){
+int ***setPipeArr(pat_t *pat)
+{
   int ***pipeArr;
-
   size_t size = pat->cmd_n * sizeof(int **);
   pipeArr = calloc(pat->cmd_n, sizeof(int **));
-  if (pipeArr == NULL){
+  if (pipeArr == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
     freePat(pat);
     exit(ERR_CODE);
   }
 
-  for (int i = 0; i < pat->cmd_n; i++){
-
+  for (int i = 0; i < pat->cmd_n; i++)
+  {
     size = 2 * sizeof(int *);
     pipeArr[i] = calloc(2, sizeof(int *));
-    if (pipeArr[i] == NULL){
+    if (pipeArr[i] == NULL)
+    {
       fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
       freeAll(pat, NULL, pipeArr);
       exit(ERR_CODE);
     }
 
-    for (int j = 0; j < 2; j++){
-
+    for (int j = 0; j < 2; j++)
+    {
       size = 2 * sizeof(int);
       pipeArr[i][j] = calloc(2, sizeof(int));
-      if (pipeArr[i][j] == NULL){
+      if (pipeArr[i][j] == NULL)
+      {
         fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
         freeAll(pat, NULL, pipeArr);
         exit(ERR_CODE);
       }
 
-      if (pipe(pipeArr[i][j]) == -1){
+      if (pipe(pipeArr[i][j]) == -1)
+      {
         fprintf(stderr, "pat: Failed to pipe\n");
         freeAll(pat, NULL, pipeArr);
         exit(ERR_CODE);
@@ -459,25 +490,27 @@ int ***setPipeArr(pat_t *pat){
  *    n         --> nombre de commande
  */
 
-int _fork(char ***cmdArr, int ***pipeArr, int n){
+int _fork(char ***cmdArr, int ***pipeArr, int n)
+{
   pid_t pid;
-
-  for (int j = 0; j < n; j++){
+  for (int j = 0; j < n; j++)
+  {
     pid = fork();
-
-    if(pid == -1){
+    if(pid == -1)
+    {
      fprintf(stderr, "pat: Failed to fork\n");
      return -1;
-
-    }else if (pid == 0){
-
-      if(dup2(pipeArr[j][0][1], STDOUT_FILENO) == -1){
-        fprintf(stderr, "pat: Failed to clone fd: %d\n", STDOUT_FILENO);
+    }
+    else if (pid == 0)
+    {
+      if(dup2(pipeArr[j][0][1], STDOUT_FIsizeO) == -1)
+      {
+        fprintf(stderr, "pat: Failed to clone fd: %d\n", STDOUT_FIsizeO);
         return -1;
       }
-
-      if(dup2(pipeArr[j][1][1], STDERR_FILENO) == -1){
-        fprintf(stderr, "pat: Failed to clone fd: %d\n", STDERR_FILENO);
+      if(dup2(pipeArr[j][1][1], STDERR_FIsizeO) == -1)
+      {
+        fprintf(stderr, "pat: Failed to clone fd: %d\n", STDERR_FIsizeO);
         return -1;
       }
 
@@ -496,19 +529,21 @@ int _fork(char ***cmdArr, int ***pipeArr, int n){
 }
 
 // Initialiser struct pollfd, et fermer les tubes inutiles.
-struct pollfd* setPoll(pat_t *pat, int ***pipeArr){
-
+struct pollfd* setPoll(pat_t *pat, int ***pipeArr)
+{
   size_t size = 2 * pat->cmd_n * sizeof(struct pollfd);
   struct pollfd *p = calloc(2 * pat->cmd_n, sizeof(struct pollfd));
 
-  if (p == NULL){
+  if (p == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", size);
     freeAll(pat, p, pipeArr);
     exit(ERR_CODE);
   }
 
   int i = 0;
-  for (int j = 0; j < (2 * pat->cmd_n) - 1; j++){
+  for (int j = 0; j < (2 * pat->cmd_n) - 1; j++)
+  {
     p[j].fd = pipeArr[i][0][0];
     p[j].events = POLLIN | POLLHUP;
     p[j].revents = 0;
@@ -542,27 +577,27 @@ struct pollfd* setPoll(pat_t *pat, int ***pipeArr){
  * tubes.
  */
 
-int getCmdNumber(int i){
-  int n;
-
-  if(i % 2 == 0) 
-    n = (i + 2) / 2;
-
-  else 
-    n = (i + 1) / 2;
-
-  return n;
+int getCmdNumber(int i)
+{
+  if(i % 2 == 0)
+  {
+    return (i + 2) / 2;
+  }
+  return (i + 1) / 2;
 }
 
 // Initialiser les ressources globals
-int setGlobalRessources(char *sep, int cmd_n){
+int setGlobalRessources(char *sep, int cmd_n)
+{
   separator = calloc(1, sizeof(sep));
-  if (separator == NULL){
+  if (separator == NULL)
+  {
     fprintf(stderr, "pat: Failed to allocate %zu bytes\n", sizeof(sep));
     return -1;
   }
-  strncpy(separator, sep, strlen(sep));
+  strncpy(separator, sep, strsize(sep));
   numberOfCmds = cmd_n;
+  return 0;
 }
 
 /* ********************************************************
@@ -571,67 +606,72 @@ int setGlobalRessources(char *sep, int cmd_n){
  * mis à jour, pour faire les bons affichages.
  */
 
-void run(struct pollfd* p, pat_t *pat, int ***pipeArr){
+void run(struct pollfd* p, pat_t *pat, int ***pipeArr)
+{
   int nfds = 2 * pat->cmd_n;
-
-  while (nfds > 0){ 
-
+  while (nfds > 0)
+  {
     poll(p, nfds, -1);
-
-    for (int i = 0; i < nfds; i++){
-
-      if (p[i].revents & (POLLIN | POLLHUP)){
-
+    for (int i = 0; i < nfds; i++)
+    {
+      if (p[i].revents & (POLLIN | POLLHUP))
+      {
         //update actual output_t
         actual.writenTo = (i % 2) + 1;
         actual.cameFrom = getCmdNumber(i);
-
         char buf[50];
-        size_t len = read(p[i].fd, buf, 50);
-
-        if(len == -1) {
+        size_t size = read(p[i].fd, buf, 50);
+        if(size == -1)
+        {
           fprintf(stderr, "pat: Failed to read\n");
           freeAll(pat, p, pipeArr);
           exit(ERR_CODE);
-
-        }else if (len == 0){
+        }
+        else if (size == 0)
+        {
           nfds--;
           continue;
         }
 
-        if(canPrintSepWithNewLine()){
-
-          if(actual.writenTo == 1){
+        if(canPrintSepWithNewLine())
+        {
+          if(actual.writenTo == 1)
+          {
             printf("\n%s", separator);
             printSep("stdout", actual.cameFrom);
-
-          }else if (actual.writenTo == 2){
+          }
+          else if (actual.writenTo == 2)
+          {
             printf("\n%s", separator);
             printSep("stderr", actual.cameFrom);
           }
-
-        }else if(canPrintSepWithoutNewLine()){
-
+        }
+        else if(canPrintSepWithoutNewLine())
+        {
           if(actual.writenTo == 1)
+          {
             printSep("stdout", actual.cameFrom);
-
+          }
           else if (actual.writenTo == 2)
+          {
             printSep("stderr", actual.cameFrom);
-
+          }
         }
 
-        printf("%.*s", (int)len, buf);
+        printf("%.*s", (int)size, buf);
         fflush(stdout);
 
         // update previous output_t
         previous.cameFrom = actual.cameFrom;
 
-        if(buf[len - 1] != '\n')
+        if(buf[size - 1] != '\n')
+        {
           previous.endsWithNewLine = 0;
-
+        }
         else
+        {
           previous.endsWithNewLine = 1;
-
+        }
         previous.writenTo = actual.writenTo;
       }
     }
@@ -640,26 +680,24 @@ void run(struct pollfd* p, pat_t *pat, int ***pipeArr){
   sleep(1);
 }
 
-int main(int argc, char *argv[]){
-
+int main(int argc, char *argv[])
+{
   signal(SIGCHLD, handler);
-
   int ***pipeArr;
   struct pollfd *p;
-
   pat_t pat = {0, setDefaultSeparator(), 1, NULL};
-
   checkArgs(&pat, argc, argv);
   setNumberOfCmd(argc, argv, &pat);
   setCmd(&pat, argc, argv);
   pipeArr = setPipeArr(&pat);
-  
-  if (setGlobalRessources(pat.sep, pat.cmd_n) == -1){
+  if (setGlobalRessources(pat.sep, pat.cmd_n) == -1)
+  {
     freeAll(&pat, NULL, pipeArr);
     exit(ERR_CODE);
   }
 
-  if (_fork(pat.cmd_arr, pipeArr, pat.cmd_n) == -1){
+  if (_fork(pat.cmd_arr, pipeArr, pat.cmd_n) == -1)
+  {
     freeAll(&pat, NULL, pipeArr);
     exit(ERR_CODE);
   }
@@ -668,12 +706,12 @@ int main(int argc, char *argv[]){
   
   run(p, &pat, pipeArr);
 
-  for (int j = 0; j < pat.cmd_n; j++){
+  for (int j = 0; j < pat.cmd_n; j++)
+  {
     close(pipeArr[j][0][0]);
     close(pipeArr[j][1][0]);
   }
 
   freeAll(&pat, p, pipeArr);
-
   return status;
 }
